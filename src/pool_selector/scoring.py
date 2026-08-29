@@ -10,6 +10,7 @@ FAILED = "FAILED"
 SPOT = "SPOT_INSTANCE_TERMINATION"
 TIMED_OUT = "TIMED_OUT"
 SPARK = "SPARK_EXECUTION_ERROR"
+FAILURE_REASONS = (SPOT, TIMED_OUT)
 KNOWN_REASONS = frozenset({SPOT, TIMED_OUT, SPARK})
 NEAR_TIE_MARGIN = 0.05
 
@@ -54,7 +55,7 @@ def aggregate(events: Iterable[JobEvent]) -> dict[str, PoolScore]:
         if event.status == SUCCESS:
             bucket[0] += 1
             continue
-        if event.status == FAILED and event.reason in {SPOT, TIMED_OUT}:
+        if event.status == FAILED and event.reason in FAILURE_REASONS:
             bucket[1] += 1
     return scores_from_counts((pool_id, s, f) for pool_id, (s, f) in counts.items())
 
@@ -63,22 +64,35 @@ def rank_pools(scores: Iterable[PoolScore]) -> list[PoolScore]:
     return sorted(scores, key=lambda item: (-item.score, item.pool_id))
 
 
-def select_best(scores: Iterable[PoolScore]) -> PoolScore | None:
-    ranked = rank_pools(scores)
+def near_tie_from_ranked(
+    ranked: list[PoolScore],
+    margin: float = NEAR_TIE_MARGIN,
+) -> list[PoolScore]:
     if not ranked:
-        return None
-    return ranked[0]
+        return []
+    threshold = ranked[0].score - margin
+    return [item for item in ranked if item.score >= threshold]
 
 
 def near_tie_candidates(
     scores: Iterable[PoolScore],
     margin: float = NEAR_TIE_MARGIN,
 ) -> list[PoolScore]:
-    ranked = rank_pools(scores)
-    if not ranked:
-        return []
-    threshold = ranked[0].score - margin
-    return [item for item in ranked if item.score >= threshold]
+    return near_tie_from_ranked(rank_pools(scores), margin)
+
+
+def pick_from_candidates(
+    candidates: list[PoolScore],
+    *,
+    rng: random.Random | None = None,
+) -> PoolScore | None:
+    if not candidates:
+        return None
+    if len(candidates) == 1:
+        return candidates[0]
+    if rng is None:
+        return random.choice(candidates)
+    return rng.choice(candidates)
 
 
 def select_pool(
@@ -87,11 +101,4 @@ def select_pool(
     rng: random.Random | None = None,
     margin: float = NEAR_TIE_MARGIN,
 ) -> PoolScore | None:
-    candidates = near_tie_candidates(scores, margin=margin)
-    if not candidates:
-        return None
-    if len(candidates) == 1:
-        return candidates[0]
-    if rng is None:
-        return random.choice(candidates)
-    return rng.choice(candidates)
+    return pick_from_candidates(near_tie_candidates(scores, margin=margin), rng=rng)

@@ -5,7 +5,8 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-VALID_CATEGORIES = frozenset({"memory", "compute", "general", "storage"})
+CATEGORIES = ("memory", "compute", "general", "storage")
+VALID_CATEGORIES = frozenset(CATEGORIES)
 POOL_PREFIX = "pool-"
 
 

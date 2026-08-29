@@ -12,6 +12,7 @@ import psycopg
 from pool_selector.catalog import data_dir, parse_pool_id
 from pool_selector.scoring import (
     FAILED,
+    FAILURE_REASONS,
     KNOWN_REASONS,
     SUCCESS,
     JobEvent,
@@ -160,13 +161,14 @@ def seed_if_empty(conn: psycopg.Connection, seed_path: Path | None = None) -> No
     logger.info("seeded job_events with %s valid rows", len(events))
 
 
-POOL_COUNTS_SQL = """
+_FAILURE_IN = ", ".join(f"'{reason}'" for reason in FAILURE_REASONS)
+POOL_COUNTS_SQL = f"""
 SELECT
     pool_id,
-    COUNT(*) FILTER (WHERE status = 'SUCCESS') AS s,
+    COUNT(*) FILTER (WHERE status = '{SUCCESS}') AS s,
     COUNT(*) FILTER (
-        WHERE status = 'FAILED'
-          AND reason IN ('SPOT_INSTANCE_TERMINATION', 'TIMED_OUT')
+        WHERE status = '{FAILED}'
+          AND reason IN ({_FAILURE_IN})
     ) AS f
 FROM job_events
 GROUP BY pool_id

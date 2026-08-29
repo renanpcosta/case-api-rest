@@ -10,8 +10,8 @@ from pool_selector.scoring import (
     aggregate,
     laplace_score,
     near_tie_candidates,
+    rank_pools,
     scores_from_counts,
-    select_best,
     select_pool,
 )
 
@@ -68,9 +68,8 @@ def test_one_success_does_not_beat_950_of_1000():
     events = [_event(pool_a, SUCCESS)]
     events.extend(_event(pool_b, SUCCESS) for _ in range(950))
     events.extend(_event(pool_b, "FAILED", SPOT) for _ in range(50))
-    winner = select_best(aggregate(events).values())
-    assert winner is not None
-    assert winner.pool_id == pool_b
+    ranked = rank_pools(aggregate(events).values())
+    assert ranked[0].pool_id == pool_b
     assert laplace_score(950, 50) > laplace_score(1, 0)
 
 
@@ -79,9 +78,8 @@ def test_tie_is_lexicographic():
         _event("pool-r6.xlarge-us-east-1c", SUCCESS),
         _event("pool-r6.xlarge-us-east-1a", SUCCESS),
     ]
-    winner = select_best(aggregate(events).values())
-    assert winner is not None
-    assert winner.pool_id == "pool-r6.xlarge-us-east-1a"
+    ranked = rank_pools(aggregate(events).values())
+    assert ranked[0].pool_id == "pool-r6.xlarge-us-east-1a"
 
 
 def test_clear_winner_is_the_only_near_tie_candidate():
