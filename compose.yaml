@@ -1,0 +1,32 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: pool
+      POSTGRES_PASSWORD: pool
+      POSTGRES_DB: pool
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pool -d pool"]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  api:
+    build: .
+    ports:
+      - "5050:5050"
+    environment:
+      DATABASE_URL: postgresql://pool:pool@postgres:5432/pool
+      DATA_DIR: /app/data
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:

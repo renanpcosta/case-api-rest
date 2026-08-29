@@ -1,0 +1,12 @@
+.venv
+.git
+.cursor
+openspec
+.pytest_cache
+.ruff_cache
+__pycache__
+*.egg-info
+.github
+docs
+tests
+README.md

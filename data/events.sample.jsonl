@@ -1,0 +1,26 @@
+{"finished_at": "2024-08-07T00:01:00.000000", "job_id": "job-a-1", "pool_id": "pool-r6.xlarge-us-east-1a", "status": "SUCCESS"}
+{"finished_at": "2024-08-07T00:02:00.000000", "job_id": "job-a-2", "pool_id": "pool-r6.xlarge-us-east-1a", "status": "SUCCESS"}
+{"finished_at": "2024-08-07T00:03:00.000000", "job_id": "job-a-3", "pool_id": "pool-r6.xlarge-us-east-1a", "status": "SUCCESS"}
+{"finished_at": "2024-08-07T00:04:00.000000", "job_id": "job-a-4", "pool_id": "pool-r6.xlarge-us-east-1a", "status": "SUCCESS"}
+{"finished_at": "2024-08-07T00:05:00.000000", "job_id": "job-a-5", "pool_id": "pool-r6.xlarge-us-east-1a", "status": "SUCCESS"}
+{"finished_at": "2024-08-07T00:06:00.000000", "job_id": "job-a-6", "pool_id": "pool-r6.xlarge-us-east-1a", "status": "SUCCESS"}
+{"finished_at": "2024-08-07T00:07:00.000000", "job_id": "job-a-7", "pool_id": "pool-r6.xlarge-us-east-1a", "status": "SUCCESS"}
+{"finished_at": "2024-08-07T00:08:00.000000", "job_id": "job-a-8", "pool_id": "pool-r6.xlarge-us-east-1a", "status": "SUCCESS"}
+{"finished_at": "2024-08-07T00:09:00.000000", "job_id": "job-a-9", "pool_id": "pool-r6.xlarge-us-east-1a", "status": "SUCCESS"}
+{"finished_at": "2024-08-07T00:10:00.000000", "job_id": "job-a-10", "pool_id": "pool-r6.xlarge-us-east-1a", "status": "SUCCESS"}
+{"finished_at": "2024-08-07T00:11:00.000000", "job_id": "job-spark-1", "pool_id": "pool-r6.xlarge-us-east-1a", "status": "FAILED", "reason": "SPARK_EXECUTION_ERROR"}
+{"finished_at": "2024-08-07T00:04:52.767830", "job_id": "job-c-1", "pool_id": "pool-r6.xlarge-us-east-1c", "status": "FAILED", "reason": "SPOT_INSTANCE_TERMINATION"}
+{"finished_at": "2024-08-07T00:12:00.000000", "job_id": "job-c-2", "pool_id": "pool-r6.xlarge-us-east-1c", "status": "FAILED", "reason": "SPOT_INSTANCE_TERMINATION"}
+{"finished_at": "2024-08-07T00:13:00.000000", "job_id": "job-c-3", "pool_id": "pool-r6.xlarge-us-east-1c", "status": "FAILED", "reason": "SPOT_INSTANCE_TERMINATION"}
+{"finished_at": "2024-08-07T00:14:00.000000", "job_id": "job-c-4", "pool_id": "pool-r6.xlarge-us-east-1c", "status": "SUCCESS"}
+{"finished_at": "2024-08-07T00:15:00.000000", "job_id": "job-compute-1", "pool_id": "pool-c6.xlarge-us-east-1a", "status": "SUCCESS"}
+{"finished_at": "2024-08-07T00:16:00.000000", "job_id": "job-compute-2", "pool_id": "pool-c6.xlarge-us-east-1a", "status": "SUCCESS"}
+{"finished_at": "2024-08-07T00:17:00.000000", "job_id": "job-compute-3", "pool_id": "pool-c6.xlarge-us-east-1a", "status": "FAILED", "reason": "TIMED_OUT"}
+{"finished_at": "2024-08-07T00:18:00.000000", "job_id": "job-mem2-1", "pool_id": "pool-r6.2xlarge-us-east-1a", "status": "SUCCESS"}
+{"finished_at": "2024-08-07T00:19:00.000000", "job_id": "job-mem2-2", "pool_id": "pool-r6.2xlarge-us-east-1a", "status": "FAILED", "reason": "SPARK_EXECUTION_ERROR"}
+{"finished_at": "2024-08-07T00:20:00.000000", "job_id": "job-gen-1", "pool_id": "pool-m6.xlarge-us-east-1b", "status": "SUCCESS"}
+{"finished_at": "2024-08-07T00:21:00.000000", "job_id": "job-gen-2", "pool_id": "pool-m6.xlarge-us-east-1b", "status": "SUCCESS"}
+{"finished_at": "2024-08-07T00:22:00.000000", "job_id": "job-storage-1", "pool_id": "pool-i3.xlarge-us-east-1a", "status": "SUCCESS"}
+not-json
+{"finished_at": "2024-08-07T00:23:00.000000", "job_id": "bad-reason", "pool_id": "pool-r6.xlarge-us-east-1a", "status": "FAILED", "reason": "UNKNOWN"}
+{"finished_at": "2024-08-07T00:24:00.000000", "job_id": "bad-pool", "pool_id": "r6.xlarge-us-east-1a", "status": "SUCCESS"}

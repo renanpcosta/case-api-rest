@@ -7,12 +7,12 @@ GET que devolve o `pool_id` de instâncias EC2 spot com maior chance de um job S
 Na máquina (uma vez): Python 3.10+, [Docker Desktop](https://docs.docker.com/get-docker/) aberto, `make`, `curl`. Depois:
 
 ```bash
-make setup
+make setup   # opcional para só subir a API; obrigatório uma vez para make lint / make test
 make dev
 curl http://localhost:5050/get-pools
 ```
 
-`make setup` cria `.venv`, instala FastAPI/pytest/ruff e constrói as imagens. `make dev` sobe Postgres + API. Stack: [compose.yaml](compose.yaml) ([Compose](https://docs.docker.com/compose/), [Compose file](https://docs.docker.com/reference/compose-file/)).
+`make setup` cria `.venv`, instala FastAPI/pytest/ruff e constrói as imagens. `make dev` sobe Postgres + API e já faz `--build` das imagens, então você pode pular o setup se só quer o curl de aceite. Stack: [compose.yaml](compose.yaml) ([Compose](https://docs.docker.com/compose/), [Compose file](https://docs.docker.com/reference/compose-file/)).
 
 | Serviço | Host | Uso |
 |---|---|---|
@@ -92,7 +92,7 @@ Detalhes: [docs/api.md](docs/api.md). Testes manuais: [docs/cenarios-de-teste.md
 Passo a passo (pytest, filtros, 200 RPS, o que olhar no log): [docs/cenarios-de-teste.md](docs/cenarios-de-teste.md).
 
 ```bash
-make setup
+make setup   # obrigatório uma vez (venv para lint e test)
 make lint
 make test
 make dev

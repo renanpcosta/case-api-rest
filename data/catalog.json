@@ -1,0 +1,8 @@
+{
+  "r6.xlarge": {"category": "memory", "vcpu": 4, "memory_gib": 32},
+  "r6.2xlarge": {"category": "memory", "vcpu": 8, "memory_gib": 64},
+  "c6.xlarge": {"category": "compute", "vcpu": 4, "memory_gib": 8},
+  "c6.2xlarge": {"category": "compute", "vcpu": 8, "memory_gib": 16},
+  "m6.xlarge": {"category": "general", "vcpu": 4, "memory_gib": 16},
+  "i3.xlarge": {"category": "storage", "vcpu": 4, "memory_gib": 30}
+}
