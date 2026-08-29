@@ -2,7 +2,7 @@
 
 Repositório greenfield (README inicial). O case pede um GET que escolhe o pool spot com menor risco de indisponibilidade, filtros de tipo de instância, e `make dev` respondendo em `http://localhost:5050/get-pools`.
 
-O dado de entrada é o JSONL do enunciado (um evento por linha). No MVP o arquivo versionado `data/events.jsonl` tem 10_000 eventos com `finished_at` numa janela de 24 h. É carregado no Postgres na subida se a tabela estiver vazia. O GET lê o Postgres (não o arquivo nem o S3), agrega S/F e aplica o quase-empate.
+O dado de entrada é o JSONL do enunciado (um evento por linha). No MVP o arquivo versionado `data/events.jsonl` tem 10_000 eventos com `finished_at` numa janela de 24 h. É carregado no Postgres na subida se a tabela estiver vazia. O GET pede S/F por `pool_id` ao Postgres (`GROUP BY`) e aplica Laplace/quase-empate em processo.
 
 Três superfícies distintas, não misturadas:
 
@@ -50,7 +50,7 @@ Alternativas: só arquivo (R4/estado compartilhado pior); Redis (cache prematuro
 
 ### 3. Score Laplace em processo (ADR 3)
 
-Por pool, com todos os eventos do seed, **agregado em cada GET**:
+Por pool, com todos os eventos do seed, **agregado em cada GET** no SQL (`GROUP BY pool_id`):
 
 - `S` = contagem de SUCCESS
 - `F` = SPOT_INSTANCE_TERMINATION + TIMED_OUT (peso 1 cada)
@@ -66,7 +66,7 @@ Por que SPARK_EXECUTION_ERROR fica fora: não mede o pool (falha da aplicação)
 
 Por que Laplace: 1/1 não vence 950/1000.
 
-Por que em processo por GET: o seed tem 10_000 linhas. N pools é pequeno. Sem cache de score: um INSERT novo em `job_events` entra no GET seguinte. Sem Redis.
+Por que em processo por GET: o seed tem 10_000 linhas. N pools é pequeno. O SQL devolve ~18 pares `(s, f)`; Laplace e quase-empate ficam em memória. Sem cache de score: um INSERT novo em `job_events` entra no GET seguinte. Sem Redis. k6 a 200 RPS no seed 10k atinge a taxa depois do `GROUP BY` (antes, scan de 10k na API: ~50/s, p95 ~5 s).
 
 Por que margem 0,05 e não softmax: concentrar quando o score distingue; espalhar só quando não distingue. Sem temperatura para calibrar.
 
@@ -89,7 +89,7 @@ compose.yaml  Makefile  Dockerfile  pyproject.toml
 README.md
 ```
 
-`app.py` = rotas; GET lê eventos, agrega e escolhe. `catalog.py` = catálogo + filtros. `scoring.py` = S/F + Laplace + quase-empate. `db.py` = schema, seed, leitura de eventos. `tools/generate_events.py` = regenera o JSONL de 10k.
+`app.py` = rotas; GET lê scores agregados e escolhe. `catalog.py` = catálogo + filtros. `scoring.py` = S/F + Laplace + quase-empate. `db.py` = schema, seed, `GROUP BY` de S/F. `tools/generate_events.py` = regenera o JSONL de 10k.
 
 Compose: `api` + `postgres`. Porta 5050. Sem hexagonal.
 
@@ -120,7 +120,7 @@ Log rico (não HTTP): `pool_id` escolhido, score, S, F, `argmax_pool_id`, `near_
 - [Seed só na tabela vazia] → Reinício não relê o JSONL se já houver linhas. Mitigação: documentar; para reset, `docker compose down -v`.
 - [Score sobre todo o seed, sem janela] → Eventos velhos pesam igual aos novos. Aceito no MVP (premissa travada).
 - [TIMED_OUT = falha do pool] → Timeout de job saudável em AZ boa penaliza o pool. Aceito no MVP.
-- [GET relê `job_events`] → 10k linhas por request. Aceito no MVP (R4 do briefing é pico de GET, não massa de 1M). Sem cache de score.
+- [GET agrega no SQL] → `GROUP BY pool_id` por request (~18 linhas). Sem cache. k6 20 RPS p95 ~10 ms; 200 RPS atinge ~199/s, p95 ~165 ms. Scan de 10k na API não sustenta 200 RPS (p95 ~5 s). Documentado em `docs/cenarios-de-teste.md`.
 - [Quase-empate] → No seed, `1a` e `1b` estão na margem: 200 RPS sem filtro se espalham. Com `?az=us-east-1a` o conjunto tem um membro. Não há teto de jobs/s por pool.
 - [Catálogo estático] → Tipo novo no JSONL sem entrada em `catalog.json` não vira candidato. Mitigação: seed e catálogo versionados juntos.
 

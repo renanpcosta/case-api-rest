@@ -10,6 +10,7 @@ from pool_selector.scoring import (
     aggregate,
     laplace_score,
     near_tie_candidates,
+    scores_from_counts,
     select_best,
     select_pool,
 )
@@ -115,3 +116,21 @@ def test_near_tie_picks_with_injected_rng():
         assert chosen is not None
         seen.add(chosen.pool_id)
     assert seen == {pool_a, pool_b}
+
+
+def test_scores_from_counts_matches_aggregate():
+    events = [
+        _event("pool-a", SUCCESS),
+        _event("pool-a", SUCCESS),
+        _event("pool-a", "FAILED", SPOT),
+        _event("pool-a", "FAILED", SPARK),
+        _event("pool-b", "FAILED", TIMED_OUT),
+    ]
+    from_events = aggregate(events)
+    from_sql_shape = scores_from_counts(
+        [
+            ("pool-a", 2, 1),
+            ("pool-b", 0, 1),
+        ]
+    )
+    assert from_events == from_sql_shape

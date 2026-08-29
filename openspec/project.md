@@ -45,8 +45,8 @@ Payload rico só no log.
 - **R1**: Python > 3.9; GET devolve um pool; filtros de tipo de instância.
 - **R2**: FastAPI + uvicorn; racional no ADR 1 (OpenAPI nativo).
 - **R3**: Postgres apenas. JSONL local no lugar de S3. Sem Redis, MinIO ou worker.
-- **R4**: API sem estado + Postgres compartilhado. Escalabilidade documentada, não k6/HPA.
-- **R5**: README, 3 ADRs, `docs/api.md`, testes unitários, CI (ruff + pytest). CD só no README.
+- **R4**: API sem estado + Postgres compartilhado. Escalabilidade documentada (réplicas). k6 só como verificação local em `docs/cenarios-de-teste.md`, não no CI nem no runtime. Sem HPA.
+- **R5**: README, 3 ADRs, `docs/api.md` (request/response), `docs/cenarios-de-teste.md` (incl. k6 local), testes unitários, CI (ruff + pytest). CD só no README.
 - **R6**: `make setup` na máquina; `make dev` → compose (api + postgres) → `http://localhost:5050/get-pools`.
 - **R7**: repo no GitHub.
 
@@ -74,7 +74,7 @@ Aliases: `/get-pool`, `/get-pools`, `/getpools`. Porta: 5050.
 - quase-empate: entram pools com `score >= melhor - 0,05`; um membro → esse pool; dois ou mais → sorteio uniforme
 - seed: `pool-r6.xlarge-us-east-1a` lidera; `pool-r6.xlarge-us-east-1b` fica na margem (GET sem filtro espalha)
 - todos os 10_000 eventos do seed; timestamps numa janela de 24 h; sem recorte e sem decaimento no GET
-- agregação S/F **em cada GET** (sem cache de score)
+- agregação S/F **em cada GET** no SQL (`GROUP BY pool_id`); Laplace/quase-empate em processo (sem cache de score)
 
 ## Filtros (todos opcionais)
 
@@ -92,5 +92,5 @@ Sem 200 inventado. Sem escada de degradação.
 ## Anti-objetivos
 
 Wilson, softmax, UCB, cooldown, inflight, meia-vida, buckets, Redis, MinIO, worker, SQS,
-Alembic, hexagonal, `.cursor/` neste produto, k6, Prometheus, `/metrics`, `/version`,
+Alembic, hexagonal, `.cursor/` neste produto, k6 no CI/runtime, Prometheus, `/metrics`, `/version`,
 payload HTTP explicável, families/exclude_az/job_id/candidates, 12 ADRs, HPA, OIDC, GHCR.

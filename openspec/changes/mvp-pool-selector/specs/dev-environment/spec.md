@@ -16,7 +16,7 @@
 
 ### Requirement: Documentação mínima do case
 
-O repositório SHALL conter: `README.md` (comando único, curl, premissas, como testar, CD em um parágrafo), `docs/adr/001-fastapi.md`, `docs/adr/002-postgres.md`, `docs/adr/003-score.md`, `docs/api.md` (rotas, params, 200/400/422/503, exemplo de log rico), `docs/cenarios-de-teste.md` (pytest, filtros, 200 RPS, verificação de log).
+O repositório SHALL conter: `README.md` (comando único, curl, premissas, como testar, CD em um parágrafo), `docs/adr/001-fastapi.md`, `docs/adr/002-postgres.md`, `docs/adr/003-score.md`, `docs/api.md` (rotas, params, 200/400/422/503, pares request/response, exemplo de log rico), `docs/cenarios-de-teste.md` (pytest, filtros, k6: como instalar, como rodar, como ler o relatório, exemplos de resultado, verificação de log).
 
 #### Scenario: README documenta o comando único
 

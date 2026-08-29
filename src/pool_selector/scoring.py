@@ -35,6 +35,18 @@ def laplace_score(s: int, f: int) -> float:
     return (s + 1) / (s + f + 2)
 
 
+def scores_from_counts(rows: Iterable[tuple[str, int, int]]) -> dict[str, PoolScore]:
+    return {
+        pool_id: PoolScore(
+            pool_id=pool_id,
+            s=s,
+            f=f,
+            score=laplace_score(s, f),
+        )
+        for pool_id, s, f in rows
+    }
+
+
 def aggregate(events: Iterable[JobEvent]) -> dict[str, PoolScore]:
     counts: dict[str, list[int]] = {}
     for event in events:
@@ -44,15 +56,7 @@ def aggregate(events: Iterable[JobEvent]) -> dict[str, PoolScore]:
             continue
         if event.status == FAILED and event.reason in {SPOT, TIMED_OUT}:
             bucket[1] += 1
-    return {
-        pool_id: PoolScore(
-            pool_id=pool_id,
-            s=s,
-            f=f,
-            score=laplace_score(s, f),
-        )
-        for pool_id, (s, f) in counts.items()
-    }
+    return scores_from_counts((pool_id, s, f) for pool_id, (s, f) in counts.items())
 
 
 def rank_pools(scores: Iterable[PoolScore]) -> list[PoolScore]:

@@ -42,3 +42,4 @@
 - [x] 6.4 Atualizar docs de produto e a change `mvp-pool-selector`; não alterar `spot-pool-selection-api`
 - [x] 6.5 `make setup`: checagens (Python 3.10+, Docker, curl, make), venv + extras de dev, seed se faltar, `docker compose build`
 - [x] 6.6 Escrever `docs/cenarios-de-teste.md` (unitário default, filtros, 200 RPS, logs)
+- [x] 6.7 GET agrega S/F no SQL (`GROUP BY pool_id`); k6 200 RPS atinge a taxa no seed 10k

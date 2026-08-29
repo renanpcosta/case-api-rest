@@ -11,7 +11,7 @@ from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel
 
 from pool_selector.catalog import Filters, InstanceSpec, load_catalog, pool_matches
-from pool_selector.db import connect, fetch_events, startup
+from pool_selector.db import connect, fetch_pool_scores, startup
 from pool_selector.scoring import (
     JobEvent,
     PoolScore,
@@ -58,9 +58,9 @@ def choose_from_scores(
     return winner, runner_up, near_tie_candidates(ranked), ranked[0]
 
 
-def _events_from_db() -> list[JobEvent]:
+def _scores_from_db() -> dict[str, PoolScore]:
     with connect() as conn:
-        return fetch_events(conn)
+        return fetch_pool_scores(conn)
 
 
 def create_app(
@@ -138,8 +138,10 @@ def create_app(
         min_memory: Annotated[int | None, Query(ge=0)] = None,
         az: str | None = None,
     ) -> PoolResponse:
-        loader = event_loader if event_loader is not None else _events_from_db
-        score_map = aggregate(loader())
+        if event_loader is not None:
+            score_map = aggregate(event_loader())
+        else:
+            score_map = _scores_from_db()
         return handle_get(score_map, category, instance_types, min_vcpu, min_memory, az)
 
     return app

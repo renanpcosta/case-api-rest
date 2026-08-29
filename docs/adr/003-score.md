@@ -52,7 +52,7 @@ Não há teto de jobs/s: se só um pool é claramente melhor, concentrar é o co
 ## Consequências
 
 - HTTP 200 devolve só `pool_id`. Score, S, F, `argmax_pool_id`, `near_tie`, filtros e runner-up vão para o **log**.
-- A agregação S/F corre **em cada GET**. Filtro e sorteio de quase-empate usam esse mapa.
+- A agregação S/F corre **em cada GET**, no SQL (`GROUP BY pool_id`). Filtro e sorteio de quase-empate usam o mapa de ~N pools em memória.
 - Réplicas leem o mesmo Postgres; com quase-empate podem devolver ids diferentes no mesmo filtro.
 - A margem `0,05` é config de produto (cinco pontos de Laplace).
 

@@ -2,7 +2,7 @@
 
 ### Requirement: Agregação S e F por pool
 
-Para cada `pool_id` com eventos carregados, o sistema SHALL calcular `S` = contagem de `SUCCESS` e `F` = contagem de `SPOT_INSTANCE_TERMINATION` + `TIMED_OUT` (peso 1 cada). MUST usar todos os eventos do seed, sem janela temporal e sem decaimento. MUST agregar esses eventos **em cada GET** (sem cache de score na subida).
+Para cada `pool_id` com eventos carregados, o sistema SHALL calcular `S` = contagem de `SUCCESS` e `F` = contagem de `SPOT_INSTANCE_TERMINATION` + `TIMED_OUT` (peso 1 cada). MUST usar todos os eventos do seed, sem janela temporal e sem decaimento. MUST agregar S/F **em cada GET** no Postgres (`GROUP BY pool_id`), sem cache de score na subida. Laplace, filtro e quase-empate continuam em processo sobre o mapa de pools.
 
 #### Scenario: SUCCESS incrementa S
 
@@ -12,7 +12,7 @@ Para cada `pool_id` com eventos carregados, o sistema SHALL calcular `S` = conta
 #### Scenario: GET relê os eventos do banco
 
 - **WHEN** um GET é atendido
-- **THEN** a agregação S/F é calculada a partir das linhas atuais de `job_events` (não de um mapa congelado na subida)
+- **THEN** a agregação S/F é calculada a partir das linhas atuais de `job_events` via `GROUP BY` (não de um mapa congelado na subida)
 
 #### Scenario: SPOT_INSTANCE_TERMINATION incrementa F
 

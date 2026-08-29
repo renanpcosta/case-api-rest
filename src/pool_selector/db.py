@@ -10,7 +10,14 @@ from pathlib import Path
 import psycopg
 
 from pool_selector.catalog import data_dir, parse_pool_id
-from pool_selector.scoring import FAILED, KNOWN_REASONS, SUCCESS, JobEvent
+from pool_selector.scoring import (
+    FAILED,
+    KNOWN_REASONS,
+    SUCCESS,
+    JobEvent,
+    PoolScore,
+    scores_from_counts,
+)
 
 logger = logging.getLogger("pool_selector")
 
@@ -153,24 +160,24 @@ def seed_if_empty(conn: psycopg.Connection, seed_path: Path | None = None) -> No
     logger.info("seeded job_events with %s valid rows", len(events))
 
 
-def fetch_events(conn: psycopg.Connection) -> list[JobEvent]:
+POOL_COUNTS_SQL = """
+SELECT
+    pool_id,
+    COUNT(*) FILTER (WHERE status = 'SUCCESS') AS s,
+    COUNT(*) FILTER (
+        WHERE status = 'FAILED'
+          AND reason IN ('SPOT_INSTANCE_TERMINATION', 'TIMED_OUT')
+    ) AS f
+FROM job_events
+GROUP BY pool_id
+"""
+
+
+def fetch_pool_scores(conn: psycopg.Connection) -> dict[str, PoolScore]:
     with conn.cursor() as cur:
-        cur.execute("SELECT finished_at, job_id, pool_id, status, reason FROM job_events")
+        cur.execute(POOL_COUNTS_SQL)
         rows = cur.fetchall()
-    events: list[JobEvent] = []
-    for finished_at, job_id, pool_id, status, reason in rows:
-        if finished_at.tzinfo is None:
-            finished_at = finished_at.replace(tzinfo=timezone.utc)
-        events.append(
-            JobEvent(
-                finished_at=finished_at,
-                job_id=job_id,
-                pool_id=pool_id,
-                status=status,
-                reason=reason,
-            )
-        )
-    return events
+    return scores_from_counts((str(pool_id), int(s), int(f)) for pool_id, s, f in rows)
 
 
 def startup(seed_path: Path | None = None) -> None:
