@@ -4,21 +4,32 @@ GET que devolve o `pool_id` de instâncias EC2 spot com maior chance de um job S
 
 ## Como subir
 
-Na máquina (uma vez): 
-
-- Python 3.10+
-- [Docker Desktop](https://docs.docker.com/get-docker/) aberto
-- `make`
-- `curl`
-
-Depois:
+Na máquina: Python 3.10+, [Docker Desktop](https://docs.docker.com/get-docker/) aberto, `make` e `curl`. O resto (`venv`, libs do `pyproject.toml`, k6 se faltar) o `make dev` instala se ainda não estiver ok.
 
 ```bash
 make dev
 curl http://localhost:5050/get-pools
 ```
 
-`make dev` é o comando único: se o `.venv` e as libs do `pyproject.toml` já estão ok, sobe o Compose; se não, roda o setup (venv + pip) e depois sobe. O `--build` fica no `docker compose up`. `make setup` continua existindo para só preparar lint/test sem subir a API. Stack: [compose.yaml](compose.yaml) ([Compose](https://docs.docker.com/compose/), [Compose file](https://docs.docker.com/reference/compose-file/)).
+`make dev` é o comando único: se o `.venv` já atende o `pyproject.toml`, só sobe o Compose; se não, roda o setup e depois sobe. O `--build` fica no `docker compose up`.
+
+Corpo esperado:
+
+```json
+{"pool_id": "pool-r6.xlarge-us-east-1a"}
+```
+
+Sem filtro o seed tem quase-empate `1a` / `1b`: o `pool_id` pode ser `us-east-1a` ou `us-east-1b`. `argmax_pool_id` no log continua `…-1a`.
+
+Parar: `make down`. 
+
+Resetar o seed (apaga o volume `pgdata`): `docker compose down -v`, depois `make dev` (o seed só carrega quando `job_events` está vazia).
+
+Lint e teste usam o mesmo `.venv`: `make lint` e `make test` ([Testes](#testes)). `make setup` existe para só preparar isso sem subir a API.
+
+## Stack
+
+[compose.yaml](compose.yaml) ([Compose](https://docs.docker.com/compose/), [Compose file](https://docs.docker.com/reference/compose-file/)): **api + postgres**.
 
 
 | Serviço  | Host                                                               | Uso                       |
@@ -27,16 +38,6 @@ curl http://localhost:5050/get-pools
 | Swagger  | [http://localhost:5050/docs](http://localhost:5050/docs)           | Tentar filtros no browser |
 | Postgres | `localhost:5432`                                                   | IDE (DBeaver) ou `psql`   |
 
-
-Corpo esperado do curl:
-
-```json
-{"pool_id": "pool-r6.xlarge-us-east-1a"}
-```
-
-Sem filtro o seed tem quase-empate `1a` / `1b`: o `pool_id` pode ser `us-east-1a` ou `us-east-1b`. `argmax_pool_id` no log continua `…-1a`.
-
-Parar: `make down`. Resetar o seed (apaga o volume `pgdata`): `docker compose down -v`, depois `make dev` (o seed só carrega quando `job_events` está vazia).
 
 Se o Compose já estava no ar **antes** de publicar a 5432: `make down` e `make dev` de novo.
 
@@ -108,16 +109,13 @@ Pares request/response (200, 422, 400, 503): [docs/api.md](docs/api.md#requisiç
 Performance (k6, como rodar, como ler o relatório, números medidos no seed 10k): [docs/cenarios-de-teste.md](docs/cenarios-de-teste.md#3-teste-de-performance-k6). `make setup` / `make dev` instalam o k6 se faltar (Homebrew). Não entra no Compose nem no CI.
 
 ```bash
-make dev     # cria o venv se faltar
 make lint
 make test
 ```
 
-`make lint` e `make test` usam `.venv`. Não precisa ativar o venv. Sem Postgres no ar, os testes de integração em `tests/test_postgres.py` são skipped; com `make dev` (ou o Postgres do CI) eles rodam.
+`make lint` e `make test` usam `.venv`. Não precisa ativar o venv. Depois de `make dev` o venv já existe; sem API, `make setup` basta. Sem Postgres no ar, os testes de integração em `tests/test_postgres.py` são skipped; com `make dev` (ou o Postgres do CI) eles rodam.
 
-Swagger: [http://localhost:5050/docs](http://localhost:5050/docs). Contrato: [docs/api.md](docs/api.md).
-
-CI em cada PR: `[.github/workflows/ci.yml](.github/workflows/ci.yml)` (ruff + pytest; Postgres de serviço para `tests/test_postgres.py`).
+Contrato: [docs/api.md](docs/api.md). CI em cada PR: `[.github/workflows/ci.yml](.github/workflows/ci.yml)` (ruff + pytest; Postgres de serviço para `tests/test_postgres.py`).
 
 ## CD
 
