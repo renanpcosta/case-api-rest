@@ -4,9 +4,8 @@ Como verificar a API à mão: unitário default, filtros e teste de performance 
 
 ## Pré-requisitos
 
-1. `make setup` (uma vez na máquina)
-2. `make dev` — API em [http://localhost:5050/get-pools](http://localhost:5050/get-pools)
-3. Para carga: [k6](https://grafana.com/docs/k6/latest/set-up/install-k6/) (`brew install k6`). Não entra no `make setup`.
+1. `make dev` — instala o venv se faltar e sobe a API em [http://localhost:5050/get-pools](http://localhost:5050/get-pools)
+2. Carga: k6. `make setup` / `make dev` instalam se faltar (Homebrew). Não entra no Compose nem no CI.
 
 Parar: `make down`. Resetar seed: `docker compose down -v`, depois `make dev`.
 
@@ -36,7 +35,7 @@ Cada 200 vira uma linha JSON (não vai no body HTTP). Campos:
 | `runner_up`      | Segundo no ranking                 | Sem filtro: `pool-r6.xlarge-us-east-1b`       |
 
 
-Exemplo (valores de `s`/`score` no seed de 10k **não** são os do sample de 27 linhas):
+Exemplo (valores de `s`/`score` no seed de 10k **não** são os do sample de 26 linhas):
 
 ```json
 {
@@ -70,14 +69,14 @@ Por que o HTTP é só `{"pool_id"}`: o case pede um id para o job. Score e evid�
 
 **O que prova:** parse, Laplace, quase-empate no seed 10k/24 h, contrato HTTP sem filtro. `r6.xlarge` em `1a` lidera; `1b` fica na margem 0,05 → o GET **sorteia**.
 
-### 1.1 pytest (sem Docker)
+### 1.1 pytest
 
 ```bash
 make lint
 make test
 ```
 
-Esperado: ruff limpo, **32 passed**. Cobre `tests/test_parse.py`, `test_scoring.py`, `test_catalog.py`, `test_api.py` (usa `events.sample.jsonl`, não o 10k) e `test_seed.py` (10k + janela 24 h + quase-empate `1a`/`1b`).
+Esperado: ruff limpo e pytest verde. Unitários (parse, score, catálogo, HTTP em memória com `events.sample.jsonl`, seed 10k) não precisam de Docker. `tests/test_postgres.py` exercita o GET de produção (`GROUP BY` no Postgres) num banco `pool_test`, sem truncar o seed da API. Sem Postgres: esses casos saem skipped. Com Postgres no ar (`make dev` ou o serviço do CI): passam junto com os unitários.
 
 ### 1.2 GET sem filtro
 
@@ -232,18 +231,19 @@ Mesmo 400: o seed só tem `us-east-1a/b/c`.
 
 ## 3. Teste de performance (k6)
 
-**O que prova:** R4 é pico de GET. k6 inventa clientes HTTP contra `localhost:5050`. Não entra no `make setup`, no Compose nem no CI.
+**O que prova:** R4 é pico de GET. k6 inventa clientes HTTP contra `localhost:5050`. Entra no `make setup` / `make dev` (binário no host). Não entra no Compose nem no CI.
 
 Script: [load.js](../load.js). O GET pede S/F ao Postgres (`GROUP BY pool_id`, ~18 linhas) e aplica Laplace/quase-empate em memória. Sem cache de score.
 
 ### 3.1 Instalar
 
+`make setup` ou `make dev` instalam o k6 se o binário não estiver no PATH (via Homebrew). Conferir:
+
 ```bash
-brew install k6
 k6 version
 ```
 
-[Instalação em outros SOs](https://grafana.com/docs/k6/latest/set-up/install/).
+Sem Homebrew: [instalação em outros SOs](https://grafana.com/docs/k6/latest/set-up/install/).
 
 ### 3.2 O que o script faz
 
@@ -355,10 +355,11 @@ No log (`docker compose logs -f api`), GET sem filtro: `near_tie` com **dois** i
 
 ## Ordem sugerida (~15 min)
 
-1. `make lint` e `make test`
-2. Terminal 2: `docker compose logs -f api`
-3. Um curl sem filtro; no log, `near_tie` com dois ids
-4. Filtros 2.1–2.6 (pares request/response em [api.md](api.md))
-5. k6 baseline (`k6 run load.js`) e pico (`RPS=200`)
-6. `make down` se terminar o demo
+1. `make dev` (venv se faltar + API)
+2. `make lint` e `make test`
+3. Terminal 2: `docker compose logs -f api`
+4. Um curl sem filtro; no log, `near_tie` com dois ids
+5. Filtros 2.1–2.6 (pares request/response em [api.md](api.md))
+6. k6 baseline (`k6 run load.js`) e pico (`RPS=200`)
+7. `make down` se terminar o demo
 

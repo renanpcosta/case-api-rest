@@ -9,7 +9,7 @@ Jobs Apache Spark em pools EC2 spot falham quando a AWS retoma capacidade. Este 
 - **Score Laplace** sobre todos os eventos do seed (10_000 linhas numa janela de 24 h; sem recorte no GET, sem decaimento): `S` = SUCCESS; `F` = SPOT_INSTANCE_TERMINATION + TIMED_OUT; SPARK_EXECUTION_ERROR persistido e ignorado no score; `score = (S+1)/(S+F+2)`. A agregação S/F corre **em cada GET** no SQL (`GROUP BY pool_id`).
 - **Quase-empate (efeito manada):** entre os que passam no filtro, entram no sorteio os pools com `score >= melhor - 0,05`. Um candidato → esse pool. Dois ou mais → escolha uniforme. Sem softmax. No seed, `r6.xlarge` `us-east-1a` lidera e `us-east-1b` fica na margem (GET sem filtro espalha).
 - **Stack do MVP**: FastAPI + uvicorn + Postgres. JSONL no repo substitui S3 no dev. Schema criado na subida. Sem Redis, MinIO, worker, SQS, Alembic, hexagonal.
-- **Um comando**: `make dev` sobe compose (api + postgres), espera o Postgres, carrega o seed se a tabela estiver vazia, responde em `http://localhost:5050/get-pools`.
+- **Um comando**: `make dev` instala o venv se as libs não atenderem o `pyproject.toml`, sobe compose (api + postgres), espera o Postgres, carrega o seed se a tabela estiver vazia, responde em `http://localhost:5050/get-pools`.
 - **Docs e qualidade**: README, 3 ADRs (FastAPI, Postgres, score), `docs/api.md` (pares request/response), `docs/cenarios-de-teste.md` (pytest, filtros, k6), testes unitários, CI com ruff + pytest. CD só descrito no README. Repo no GitHub.
 
 Nenhuma mudança é breaking: o repositório é greenfield.

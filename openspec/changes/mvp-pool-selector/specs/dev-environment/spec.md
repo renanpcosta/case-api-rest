@@ -2,12 +2,22 @@
 
 ### Requirement: Um comando sobe a API na porta 5050
 
-`make setup` SHALL preparar a máquina local: checar Python >= 3.10, Docker com Compose v2, `curl` e `make`; criar `.venv` com extras de dev; garantir `data/events.jsonl`; construir as imagens do compose. `make dev` SHALL subir o compose com `api` e `postgres`, esperar o Postgres, criar o schema se necessário, carregar o seed versionado (`data/events.jsonl`, 10_000 eventos em 24 h) se a tabela estiver vazia, e expor a API em `http://localhost:5050`. MUST NÃO exigir Redis, MinIO nem worker.
+`make setup` SHALL preparar a máquina local: checar Python >= 3.10, Docker com Compose v2, `curl` e `make`; criar `.venv` com extras de dev; garantir `data/events.jsonl`; instalar k6 se estiver ausente (Homebrew; se não houver brew, avisar sem falhar); construir as imagens do compose. `make dev` SHALL, se as dependências do venv não atenderem o `pyproject.toml`, executar o setup; em seguida subir o compose com `api` e `postgres`, esperar o Postgres, criar o schema se necessário, carregar o seed versionado (`data/events.jsonl`, 10_000 eventos em 24 h) se a tabela estiver vazia, e expor a API em `http://localhost:5050`. MUST NÃO exigir Redis, MinIO nem worker.
 
-#### Scenario: setup deixa lint, test e imagens prontos
+#### Scenario: setup deixa lint e test prontos
 
 - **WHEN** `make setup` conclui com sucesso
-- **THEN** `.venv` tem ruff e pytest, e `docker compose build` já rodou
+- **THEN** `.venv` tem ruff e pytest
+
+#### Scenario: setup instala k6 se faltar
+
+- **WHEN** `k6` não está no PATH e o Homebrew está disponível
+- **THEN** `make setup` (ou `make dev`) instala o k6
+
+#### Scenario: make dev instala se faltar e sobe a API
+
+- **WHEN** `make dev` é o primeiro comando na máquina (venv ausente ou libs abaixo do `pyproject.toml`)
+- **THEN** o setup roda antes do compose
 
 #### Scenario: curl de aceite
 
@@ -21,7 +31,7 @@ O repositório SHALL conter: `README.md` (comando único, curl, premissas, como 
 #### Scenario: README documenta o comando único
 
 - **WHEN** um leitor abre `README.md`
-- **THEN** encontra `make setup`, `make dev` e o curl de aceite na porta 5050
+- **THEN** encontra `make dev` como comando único de subida e o curl de aceite na porta 5050
 
 ### Requirement: CI com ruff e pytest
 

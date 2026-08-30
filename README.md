@@ -14,12 +14,11 @@ Na máquina (uma vez):
 Depois:
 
 ```bash
-make setup   # opcional para só subir a API; obrigatório uma vez para make lint / make test
 make dev
 curl http://localhost:5050/get-pools
 ```
 
-`make setup` cria `.venv`, instala FastAPI/pytest/ruff e constrói as imagens. `make dev` sobe Postgres + API e já faz `--build` das imagens, então você pode pular o setup se só quer o curl de aceite. Stack: [compose.yaml](compose.yaml) ([Compose](https://docs.docker.com/compose/), [Compose file](https://docs.docker.com/reference/compose-file/)).
+`make dev` é o comando único: se o `.venv` e as libs do `pyproject.toml` já estão ok, sobe o Compose; se não, roda o setup (venv + pip) e depois sobe. O `--build` fica no `docker compose up`. `make setup` continua existindo para só preparar lint/test sem subir a API. Stack: [compose.yaml](compose.yaml) ([Compose](https://docs.docker.com/compose/), [Compose file](https://docs.docker.com/reference/compose-file/)).
 
 
 | Serviço  | Host                                                               | Uso                       |
@@ -106,20 +105,19 @@ Passo a passo (pytest, filtros, o que olhar no log): [docs/cenarios-de-teste.md]
 
 Pares request/response (200, 422, 400, 503): [docs/api.md](docs/api.md#requisições-e-respostas).
 
-Performance (k6, como rodar, como ler o relatório, números medidos no seed 10k): [docs/cenarios-de-teste.md](docs/cenarios-de-teste.md#3-teste-de-performance-k6). k6 não entra no `make setup` nem no CI (`brew install k6`).
+Performance (k6, como rodar, como ler o relatório, números medidos no seed 10k): [docs/cenarios-de-teste.md](docs/cenarios-de-teste.md#3-teste-de-performance-k6). `make setup` / `make dev` instalam o k6 se faltar (Homebrew). Não entra no Compose nem no CI.
 
 ```bash
-make setup   # obrigatório uma vez (venv para lint e test)
+make dev     # cria o venv se faltar
 make lint
 make test
-make dev
 ```
 
-`make lint` e `make test` usam `.venv`. Não precisa ativar o venv.
+`make lint` e `make test` usam `.venv`. Não precisa ativar o venv. Sem Postgres no ar, os testes de integração em `tests/test_postgres.py` são skipped; com `make dev` (ou o Postgres do CI) eles rodam.
 
 Swagger: [http://localhost:5050/docs](http://localhost:5050/docs). Contrato: [docs/api.md](docs/api.md).
 
-CI em cada PR: `[.github/workflows/ci.yml](.github/workflows/ci.yml)` (ruff + pytest).
+CI em cada PR: `[.github/workflows/ci.yml](.github/workflows/ci.yml)` (ruff + pytest; Postgres de serviço para `tests/test_postgres.py`).
 
 ## CD
 

@@ -18,7 +18,7 @@ Três superfícies distintas, não misturadas:
 - FastAPI + uvicorn + um Postgres. JSONL local no lugar de S3.
 - Parser fiel ao enunciado: UTC em `finished_at` naive; `pool_id` com tipo contendo ponto e AZ contendo hífen; descarte de linha inválida sem derrubar a carga.
 - Score sobre todos os eventos do seed. SPARK_EXECUTION_ERROR persistido e fora de S e F. TIMED_OUT conta como falha (peso 1). Quase-empate: sorteio uniforme se `score >= melhor - 0,05`; senão o melhor sozinho.
-- Um comando: `make dev`. Aceite: `curl http://localhost:5050/get-pools` devolve JSON com `pool_id`.
+- Um comando: `make dev` (setup se o venv/libs não atenderem o `pyproject.toml`). Aceite: `curl http://localhost:5050/get-pools` devolve JSON com `pool_id`.
 - README, 3 ADRs, `docs/api.md`, `docs/cenarios-de-teste.md`, testes unitários, CI (ruff + pytest). CD só no README. Repo no GitHub.
 
 **Fora de escopo:**

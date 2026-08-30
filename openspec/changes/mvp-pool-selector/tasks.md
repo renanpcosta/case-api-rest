@@ -25,10 +25,11 @@
 - [x] 4.2 Validar query params (422); filtro sem candidato (400); tabela vazia (503)
 - [x] 4.3 Emitir log rico (score, S, F, `argmax_pool_id`, `near_tie`, filtros, runner-up) sem colocar isso no corpo HTTP
 - [x] 4.4 Testes dos três aliases 200 e dos códigos 400/422/503
+- [x] 4.5 Teste de integração: `GROUP BY` no Postgres e GET com `use_db=True` (banco `pool_test`, sem truncar o seed da API)
 
 ## 5. Dev, docs e CI
 
-- [x] 5.1 `make dev` sobe o compose, espera o Postgres, aplica schema+seed e deixa `curl http://localhost:5050/get-pools` devolver `pool_id`
+- [x] 5.1 `make dev` garante o setup se faltar, sobe o compose, espera o Postgres, aplica schema+seed e deixa `curl http://localhost:5050/get-pools` devolver `pool_id`
 - [x] 5.2 Escrever `README.md` (comando único, curl, premissas, como testar, CD em um parágrafo)
 - [x] 5.3 Escrever `docs/adr/001-fastapi.md`, `docs/adr/002-postgres.md`, `docs/adr/003-score.md` e `docs/api.md`
 - [x] 5.4 Escrever `.github/workflows/ci.yml` com ruff + pytest (sem matriz, Trivy, k6, mutation, coverage-gate)
@@ -40,6 +41,6 @@
 - [x] 6.2 Remover cache de score na subida: GET lê `job_events`, agrega e aplica quase-empate por request
 - [x] 6.3 Seed via `parse_jsonl` + `insert_events` (sem COPY de 1M); Dockerfile copia `events.jsonl`
 - [x] 6.4 Atualizar docs de produto e a change `mvp-pool-selector`; não alterar `spot-pool-selection-api`
-- [x] 6.5 `make setup`: checagens (Python 3.10+, Docker, curl, make), venv + extras de dev, seed se faltar, `docker compose build`
+- [x] 6.5 `make setup`: checagens (Python 3.10+, Docker, curl, make), venv + extras de dev, seed se faltar, k6 se faltar (Homebrew), `docker compose build`. `make dev` chama o setup só se as versões do venv não atenderem o `pyproject.toml`; o k6 é conferido também nesse caminho
 - [x] 6.6 Escrever `docs/cenarios-de-teste.md` (unitário default, filtros, 200 RPS, logs)
 - [x] 6.7 GET agrega S/F no SQL (`GROUP BY pool_id`); k6 200 RPS atinge a taxa no seed 10k

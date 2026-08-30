@@ -15,6 +15,7 @@ test:
 	$(VENV)/bin/pytest -q
 
 dev:
+	bash scripts/ensure.sh
 	docker compose up --build -d
 	@i=0; \
 	while [ $$i -lt 60 ]; do \

@@ -4,6 +4,11 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 VENV="${VENV:-.venv}"
+FROM_ENSURE=0
+if [[ "${1:-}" == "--from-ensure" ]]; then
+	FROM_ENSURE=1
+	shift
+fi
 
 fail() {
 	echo "$1" >&2
@@ -33,10 +38,15 @@ if [[ ! -f data/events.jsonl ]]; then
 	python3 tools/generate_events.py
 fi
 
-echo "==> imagens Docker (api + postgres:16)"
-docker compose build
+# shellcheck source=scripts/k6.sh
+source "$ROOT/scripts/k6.sh"
+install_k6_if_needed
 
-echo
-echo "Pronto. Próximo:"
-echo "  make dev     # API em http://localhost:5050/get-pools"
-echo "  make lint && make test"
+if [[ "$FROM_ENSURE" -eq 0 ]]; then
+	echo "==> imagens Docker (api + postgres:16)"
+	docker compose build
+	echo
+	echo "Pronto. Próximo:"
+	echo "  make dev     # API em http://localhost:5050/get-pools"
+	echo "  make lint && make test"
+fi

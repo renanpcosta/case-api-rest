@@ -105,7 +105,7 @@ content-type: application/json
 {"pool_id": "pool-c6.2xlarge-us-east-1a"}
 ```
 
-Não é o default `r6.xlarge`. O filtro cortou os pools memory.
+Não é o default `r6.xlarge`. O filtro cortou os pools memory. No seed, vários `c6.*` ficam na margem de quase-empate: o tipo (`c6.xlarge` ou `c6.2xlarge`) e a AZ podem variar; o id continua começando com `pool-c6.`.
 
 ### 200 — só AZ
 
@@ -247,7 +247,7 @@ Em 200 a API registra uma linha JSON para debug de plataforma:
 }
 ```
 
-Valores de `s` / `score` são do seed de 10k, não do sample de 27 linhas. Ver o log:
+Valores de `s` / `score` são do seed de 10k, não do sample de 26 linhas. Ver o log:
 
 ```bash
 docker compose logs api
@@ -256,4 +256,4 @@ docker compose logs -f api
 
 Cenários manuais (default, filtros, k6 e o que cada campo do log prova): [cenarios-de-teste.md](cenarios-de-teste.md).
 
-Teste de performance (instalar k6, comandos, como ler o relatório, números medidos): [cenarios-de-teste.md](cenarios-de-teste.md#3-teste-de-performance-k6).
+Teste de performance (`make setup` / `make dev` instalam k6 se faltar; comandos, relatório, números medidos): [cenarios-de-teste.md](cenarios-de-teste.md#3-teste-de-performance-k6).

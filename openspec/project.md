@@ -6,8 +6,7 @@ API REST que devolve o `pool_id` de instâncias EC2 spot com maior chance de o j
 falhar por indisponibilidade, respeitando filtros de tipo de instância. Case: "Desafio 02 —
 API REST para seleção de pools de instâncias".
 
-Um comando de bootstrap: `make setup`. Aceite da API: `make dev` → `curl http://localhost:5050/get-pools` devolve JSON com
-`pool_id`.
+Um comando de bootstrap: `make dev` (roda o setup se o venv/libs não atenderem o `pyproject.toml`). Aceite da API: `curl http://localhost:5050/get-pools` devolve JSON com `pool_id`.
 
 ## Glossário
 
@@ -47,7 +46,7 @@ Payload rico só no log.
 - **R3**: Postgres apenas. JSONL local no lugar de S3. Sem Redis, MinIO ou worker.
 - **R4**: API sem estado + Postgres compartilhado. Escalabilidade documentada (réplicas). k6 só como verificação local em `docs/cenarios-de-teste.md`, não no CI nem no runtime. Sem HPA.
 - **R5**: README, 3 ADRs, `docs/api.md` (request/response), `docs/cenarios-de-teste.md` (incl. k6 local), testes unitários, CI (ruff + pytest). CD só no README.
-- **R6**: `make setup` na máquina; `make dev` → compose (api + postgres) → `http://localhost:5050/get-pools`.
+- **R6**: `make dev` (setup se faltar) → compose (api + postgres) → `http://localhost:5050/get-pools`.
 - **R7**: repo no GitHub.
 
 Aliases: `/get-pool`, `/get-pools`, `/getpools`. Porta: 5050.
@@ -62,7 +61,7 @@ Aliases: `/get-pool`, `/get-pools`, `/getpools`. Porta: 5050.
 | Seed | `data/events.jsonl` (10k, 24 h, versionado) se a tabela estiver vazia |
 | Catálogo | `data/catalog.json` |
 | Qualidade | ruff + pytest |
-| Infra | Docker Compose: api + postgres; `make setup` no host |
+| Infra | Docker Compose: api + postgres; `make dev` no host (setup se faltar) |
 | CI | GitHub Actions: ruff + pytest |
 
 ## Score (travado)

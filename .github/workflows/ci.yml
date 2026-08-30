@@ -8,6 +8,22 @@ on:
 jobs:
   lint-test:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://pool:pool@localhost:5432/pool
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: pool
+          POSTGRES_PASSWORD: pool
+          POSTGRES_DB: pool
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U pool -d pool"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
