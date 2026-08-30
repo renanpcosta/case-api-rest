@@ -6,7 +6,13 @@ Aceito.
 
 ## Contexto
 
-A API ranqueia **disponibilidade de capacidade spot**, não qualidade do job. A única evidência são eventos de término com `status` e `reason`. Argmax puro em todo GET com o mesmo filtro manda 100% dos jobs para o mesmo pool (efeito manada) antes de qualquer evento novo chegar.
+A API escolhe pool por **disponibilidade de capacidade spot**, não por qualidade do job. A evidência é o conjunto de eventos de término já carregados (`status` e `reason`): o GET não ingere evento novo e o score usa todos eles, sem janela.
+
+No mesmo dado há três problemas: 
+
+- `reason` mistura falha de pool e falha de aplicação; 
+- a taxa crua `S/(S+F)` faz 1/1 vencer 950/1000; 
+- argmax puro devolve sempre o mesmo `pool_id` quando dois scores não se distinguem.
 
 ## Decisão
 
@@ -19,8 +25,8 @@ Para cada `pool_id`, usando **todos** os eventos do seed carregados (sem janela 
 
 Entre os pools que passam nos filtros HTTP:
 
-1. `S*` = maior score
-2. Conjunto de quase-empate = pools com `score >= S* - 0,05`
+1. Melhor score = maior Laplace entre os candidatos
+2. Conjunto de quase-empate = pools com `score >= melhor - 0,05`
 3. Um membro → esse `pool_id`
 4. Dois ou mais → sorteio **uniforme** (`random.choice`)
 
@@ -45,16 +51,18 @@ Evidência escassa não pode vencer evidência abundante: **1/1 não vence 950/1
 
 ### Por que quase-empate 0,05 e não argmax
 
-Argmax concentra todos os GETs iguais no nº 1. A margem espalha só quando o score **não distingue**. No seed, `r6.xlarge` em `us-east-1a` lidera e `us-east-1b` fica dentro de 0,05: o GET sem filtro sorteia. Com `?az=us-east-1a` o conjunto tem um membro e o id é estável.
+Argmax concentra todos os GETs iguais no nº 1 mesmo quando o Laplace não separa os pools. A margem espalha **só** nesse caso; se um pool é claramente melhor, concentrar é o correto. Não há teto de jobs/s nem “efeito manada” a corrigir com evento futuro: o seed é estático.
 
-Não há teto de jobs/s: se só um pool é claramente melhor, concentrar é o correto.
+`0,05` não é constante solta. O score Laplace já vive em `[0, 1]`; a margem é cinco pontos percentuais **nessa mesma escala** (prior Beta uniforme), não temperatura de softmax nem z de Wilson. O passo canônico com F = 0 é 3 SUCCESS vs 2 SUCCESS: `(3+1)/(3+0+2) = 0,80` e `(2+1)/(2+0+2) = 0,75`, diferença exatamente 0,05 — a API não trata “um sucesso a mais” como ranking fechado. Com evidência abundante o mesmo 0,05 é um gap real (Laplace de 950/1000 vs ~900/1000), então o nº 1 vence sozinho. No seed, `r6.xlarge` em `us-east-1a` lidera e `us-east-1b` fica ~0,042 abaixo: o GET sem filtro sorteia. Com `?az=us-east-1a` o conjunto tem um membro e o id é estável.
 
 ## Consequências
 
 - HTTP 200 devolve só `pool_id`. Score, S, F, `argmax_pool_id`, `near_tie`, filtros e runner-up vão para o **log**.
 - A agregação S/F corre **em cada GET**, no SQL (`GROUP BY pool_id`). Filtro e sorteio de quase-empate usam o mapa de ~N pools em memória.
 - Réplicas leem o mesmo Postgres; com quase-empate podem devolver ids diferentes no mesmo filtro.
-- A margem `0,05` é config de produto (cinco pontos de Laplace).
+- A margem `0,05` é config de produto: cinco pontos percentuais na escala do próprio Laplace.
+
+
 
 ## Alternativas recusadas
 

@@ -20,7 +20,10 @@ O Pydantic valida os query params (enum `category`, `min_vcpu`/`min_memory` ≥ 
 - A validação dos filtros vive na assinatura da rota, não em parsing ad-hoc.
 - O model HTTP 200 tem um único campo: `pool_id`.
 
+
+
 ## Alternativas
 
-- Flask: menor, mas OpenAPI seria trabalho extra (falha a parte “documentação sem trabalho extra” de R5).
+- Flask: menor, mas OpenAPI seria trabalho extra nesse momento.
 - Django: superfície grande demais para um GET.
+
